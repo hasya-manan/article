@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editorial Dashboard - Article</title>
+  
+    <script src="/js/head.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@400;500;600&display=swap');
+        
+        /* Vintage paper theme for the dashboard */
+        body { 
+            background-color: #f4f1ea;
+            font-family: 'Inter', sans-serif; 
+            color: #1a1a1a;
+        }
+        .font-newspaper { font-family: 'Playfair Display', serif; }
+        
+        .editorial-card {
+            background-color: #ffffff;
+            border: 1px solid #d1cec3;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.05); /* subtle vintage shadow */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b-2 border-black px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <h1 class="font-newspaper text-2xl font-black uppercase tracking-widest text-black">Editorial Board</h1>
+        </div>
+        <div class="flex items-center gap-6">
+            <span id="userName" class="text-sm font-semibold uppercase tracking-wider text-gray-600">Loading...</span>
+            <button onclick="logout()" class="bg-black hover:bg-gray-800 text-white px-5 py-2 text-xs font-bold uppercase tracking-widest transition">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="grow p-6 md:p-10 max-w-5xl mx-auto w-full">
+        
+        <!-- Add Article Form -->
+        <div class="editorial-card p-8 mb-10">
+            <h2 class="font-newspaper text-2xl font-bold mb-6 border-b border-gray-300 pb-2">Draft New Article</h2>
+            <form onsubmit="createArticle(event)" class="flex flex-col gap-5">
+                <input type="text" id="title" placeholder="Headline Title" required
+                    class="w-full px-4 py-3 bg-transparent border-b border-gray-400 focus:outline-none focus:border-black transition text-lg font-newspaper placeholder-gray-400">
+                
+                <textarea id="content" placeholder="Write your article content here..." rows="5" required
+                    class="w-full px-4 py-3 bg-transparent border border-gray-300 focus:outline-none focus:border-black transition text-gray-700 placeholder-gray-400"></textarea>
+                
+                <div id="createError" class="hidden text-sm text-red-600 bg-red-50 p-3 border border-red-200"></div>
+
+                <button type="submit" id="createBtn" class="bg-black hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-sm py-3 px-8 self-start transition flex items-center gap-2">
+                    Publish Article <span>&rarr;</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Article List -->
+        <div class="editorial-card p-8">
+            <div class="flex justify-between items-end mb-6 border-b border-gray-300 pb-2">
+                <h2 class="font-newspaper text-2xl font-bold">Published Articles</h2>
+                <button onclick="loadArticles()" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black transition">Refresh List</button>
+            </div>
+            
+            <div id="articleList" class="flex flex-col gap-6">
+                <p class="text-gray-500 text-sm italic">Loading articles...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. Check if user is logged in when page loads
+        async function checkAuth() {
+            try {
+                const res = await api.get('/api/user');
+                document.getElementById('userName').innerText = 'Logged in: ' + res.data.name;
+                loadArticles(); 
+            } catch (error) {
+                console.log("Not logged in, redirecting handled by interceptor.");
+            }
+        }
+
+        // 2. Load Articles
+        async function loadArticles() {
+            const list = document.getElementById('articleList');
+            list.innerHTML = '<p class="text-gray-500 text-sm italic">Loading...</p>';
+            
+            try {
+                const res = await api.get('/api/articles');
+                const articles = res.data.data;
+
+                if (articles.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500 text-sm italic">No articles found. Draft one above!</p>';
+                    return;
+                }
+
+                list.innerHTML = articles.map(article => `
+                    <div class="border-b border-gray-200 pb-4 flex justify-between items-start group">
+                        <div class="pr-4">
+                            <h3 class="font-newspaper text-xl font-bold text-black mb-1">${article.title}</h3>
+                            <p class="text-gray-600 text-sm">${article.content}</p>
+                        </div>
+                        <!-- Delete Button -->
+                        <button onclick="deleteArticle(${article.id})" class="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = '<p class="text-red-500 text-sm">Failed to load articles. Check console.</p>';
+                console.error(error);
+            }
+        }
+
+        // 3. Create Article
+        async function createArticle(e) {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const btn = document.getElementById('createBtn');
+            const errBox = document.getElementById('createError');
+
+            btn.innerHTML = 'Publishing...';
+            btn.disabled = true;
+            errBox.classList.add('hidden');
+
+            try {
+                await api.get('/sanctum/csrf-cookie');
+                await api.post('/api/articles', { title, content });
+                
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
+                
+                loadArticles(); 
+            } catch (error) {
+                errBox.innerText = 'Error creating article: ' + (error.response?.data?.message || 'Check console');
+                errBox.classList.remove('hidden');
+                console.error(error.response?.data);
+            } finally {
+                btn.innerHTML = 'Publish Article <span>&rarr;</span>';
+                btn.disabled = false;
+            }
+        }
+
+        // 4. Delete Article
+        async function deleteArticle(id) {
+            if(!confirm('Are you sure you want to delete this article?')) return;
+
+            try {
+                await api.get('/sanctum/csrf-cookie');
+                await api.delete(`/api/articles/${id}`);
+                loadArticles(); 
+            } catch (error) {
+                alert('Failed to delete article');
+                console.error(error);
+            }
+        }
+
+        // 5. Logout
+        async function logout() {
+            try {
+                await api.post('/api/logout');
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Run auth check on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkAuth();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
