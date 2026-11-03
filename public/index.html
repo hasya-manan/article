@@ -25,22 +25,32 @@
 </head>
 <body class="min-h-screen flex justify-center p-4 md:p-8">
 
-       <!--  LOGIN BUTTON -->
-    <a href="/login.html" class="bg-black hover:bg-gray-800 text-white px-5 py-2 text-xs font-bold uppercase tracking-widest transition">
-        Author Login &rarr;
-    </a>
+    
     <!-- Newspaper Container -->
     <div class="bg-white max-w-6xl w-full shadow-2xl border border-gray-200 p-6 md:p-12">
 
         
         <!-- Header -->
+                <!-- Header -->
         <header class="text-center mb-10">
             <h1 class="font-newspaper text-5xl md:text-7xl font-black uppercase tracking-widest border-b-4 border-black pb-4 mb-2">
                 The Article Journal
             </h1>
+            
+            <!-- UPDATE THIS SECTION -->
             <div class="flex justify-between items-center text-xs md:text-sm uppercase tracking-widest font-semibold border-b border-black pb-2">
-                <span>Kuala Lumpur, Malaysia</span>
-                <span id="currentDate"></span>
+                
+                <!-- Left Side: Location and Date -->
+                <div class="flex gap-6">
+                    <span>Kuala Lumpur, Malaysia</span>
+                    <span id="currentDate"></span>
+                </div>
+
+                <!-- Right Side: Login Button -->
+                <a href="/login.html" class="bg-black hover:bg-gray-800 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest transition">
+                    Author Login &rarr;
+                </a>
+
             </div>
         </header>
 
@@ -79,7 +89,7 @@
                 const otherArticles = articles.slice(1);
 
                 // Render Main Article (Spans 3 columns on desktop)
-                let html = `
+                                let html = `
                     <div class="col-span-1 md:col-span-3 mb-8 border-b-2 border-black pb-8 flex flex-col md:flex-row gap-8 items-center">
                         <div class="md:w-2/3">
                             <span class="bg-red-700 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 mb-4 inline-block">Top Story</span>
@@ -87,8 +97,13 @@
                             <p class="text-gray-600 text-lg leading-relaxed mb-4 font-serif">${mainArticle.content}</p>
                             <span class="text-sm font-bold uppercase tracking-wider">By Admin &bull; ${new Date(mainArticle.created_at).toLocaleDateString()}</span>
                         </div>
-                        <div class="md:w-1/3 h-64 md:h-full bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-400 uppercase tracking-widest text-sm">
-                            Image Placeholder
+                        
+                        <!-- UPDATE THIS SECTION -->
+                        <div class="md:w-1/3 w-full">
+                            ${mainArticle.image 
+                                ? `<img src="/storage/${mainArticle.image}" class="w-full h-64 md:h-80 object-cover border border-gray-300" alt="${mainArticle.title}">`
+                                : `<div class="w-full h-64 md:h-80 bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-400 uppercase tracking-widest text-sm">Image Placeholder</div>`
+                            }
                         </div>
                     </div>
                 `;

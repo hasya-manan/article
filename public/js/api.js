@@ -6,7 +6,7 @@ const api = axios.create({
     // Tell Laravel we expect JSON back (prevents the "Route [login] not defined" HTML redirect)
     headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        
     }
 });
 
