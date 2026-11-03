@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" value="test@example.com"><br><br>
+    <input type="password" id="password" placeholder="Password" value="password"><br><br>
+    <button onclick="login()">Login</button>
+    <button onclick="getUser()">Get User</button>
+    <pre id="output"></pre>
+
+    <script>
+        // Axios automatically carries cookies, and Laravel will automatically read the XSRF-TOKEN cookie
+        axios.defaults.withCredentials = true;
+        axios.defaults.baseURL = 'http://127.0.0.1:8000';
+
+        async function login() {
+            try {
+                // 1. First get CSRF Cookie (must do)
+                await axios.get('/sanctum/csrf-cookie');
+                
+                // 2. Login (Axios will automatically extract the token from the cookie and put it in the header)
+                const res = await axios.post('/api/login', {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                });
+                document.getElementById('output').innerText = JSON.stringify(res.data, null, 2);
+            } catch (e) {
+                document.getElementById('output').innerText = 'Error: ' + JSON.stringify(e.response?.data);
+            }
+        }
+
+        async function getUser() {
+            try {
+                // 3. Access the protected route
+                const res = await axios.get('/api/user');
+                document.getElementById('output').innerText = JSON.stringify(res.data, null, 2);
+            } catch (e) {
+                document.getElementById('output').innerText = 'Error: ' + JSON.stringify(e.response?.data);
+            }
+        }
+    </script>
+</body>
+</html>
