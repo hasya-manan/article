@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::post('/login', function (Request $request) {
     $user = User::where('email', $request->email)->first();
@@ -14,7 +15,7 @@ Route::post('/login', function (Request $request) {
     }
     auth()->login($user);
     return response()->json(['user' => $user]);
-});
+})->middleware('throttle:5,1'); //rate limit to 5 attempts per minute to prevent brute force attacks
 
 // --- PUBLIC ROUTE (No login required) ---
 Route::get('/articles', function () {
@@ -34,10 +35,16 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json($article, 201);
     });
 
-    Route::post('/logout', function (Request $request) {
-        auth()->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return response()->json(['message' => 'Logged out']);
+        Route::post('/logout', function (Request $request) {
+        // 1. Log the user out
+        Auth::guard('web')->logout();
+        
+        // 2. Clear the session safely
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return response()->json(['message' => 'Logged out successfully']);
     });
 });
