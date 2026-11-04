@@ -6,6 +6,7 @@
     <title>Editorial Dashboard - Article</title>
   
     <script src="/js/head.js"></script>
+    <script src="/js/component/alert.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
@@ -181,13 +182,15 @@
                     throw new Error(data.message || 'Something went wrong');
                 }
 
-                console.log("Success:", data);
+                //console.log("Success:", data);
+                showToast('Article published successfully!', false);
                 
                 form.reset();
-                loadArticles(); 
+                if (typeof loadArticles === 'function') {
+                    loadArticles(); 
+                }
             } catch (error) {
-                errBox.innerText = 'Error creating article: ' + error.message;
-                errBox.classList.remove('hidden');
+                showToast('Error: ' + error.message, true);
                 console.error(error);
             } finally {
                 btn.innerHTML = 'Publish Article <span>&rarr;</span>';
@@ -218,6 +221,8 @@
                 console.error(error);
             }
         }
+
+           
 
         // Run auth check on page load
         window.addEventListener('load', () => {

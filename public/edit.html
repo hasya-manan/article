@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Article - Editorial Board</title>
     <script src="/js/head.js"></script>
+    <script src="/js/component/alert.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@400;500;600&display=swap');
         body { background-color: #f4f1ea; font-family: 'Inter', sans-serif; color: #1a1a1a; }
@@ -72,26 +73,23 @@
         }
 
         // 3. Submit updated data
-        async function updateArticle(e) {
+       async function updateArticle(e) {
             e.preventDefault();
             const btn = document.getElementById('updateBtn');
-            const errBox = document.getElementById('editError');
             const form = document.getElementById('editForm');
 
             btn.innerHTML = 'Saving...';
             btn.disabled = true;
-            errBox.classList.add('hidden');
 
             try {
                 await api.get('/sanctum/csrf-cookie');
                 const xsrfToken = decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN=')).split('=')[1]);
 
                 const formData = new FormData(form);
-                // Tell Laravel this POST request acts as a PUT request
-                formData.append('_method', 'POST');
+                // NO _method needed here since your route is explicitly POST!
 
                 const response = await fetch(`/api/articles/${articleId}`, {
-                    method: 'POST',
+                    method: 'POST', // Direct POST to your update endpoint
                     headers: {
                         'Accept': 'application/json',
                         'X-XSRF-TOKEN': xsrfToken
@@ -105,11 +103,16 @@
                     throw new Error(data.message || 'Something went wrong');
                 }
 
-                alert('Article updated successfully!');
-                window.location.href = '/dashboard.html';
+                // Trigger your reusable toast
+                showToast('Article updated successfully!', false);
+
+                // Delay slightly so the user sees the toast before redirecting
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1200);
+
             } catch (error) {
-                errBox.innerText = 'Error updating article: ' + error.message;
-                errBox.classList.remove('hidden');
+                showToast('Error: ' + error.message, true);
                 console.error(error);
             } finally {
                 btn.innerHTML = 'Save Changes';
@@ -117,6 +120,7 @@
             }
         }
 
+        window.addEventListener('load', fetchArticle);
         window.addEventListener('load', fetchArticle);
     </script>
 </body>
