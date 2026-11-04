@@ -116,8 +116,8 @@
                         </div>
 
                         <!-- Delete Button -->
-                        <button onclick="deleteArticle(${article.id})" class="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <button onclick="deleteArticle('${article.id}', this)" class="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
                         </button>
@@ -199,16 +199,42 @@
         }
 
         // 4. Delete Article
-        async function deleteArticle(id) {
-            if(!confirm('Are you sure you want to delete this article?')) return;
+        async function deleteArticle(id, btnElement) {
+            //console.log("Attempting to delete article with ID:", id);
+            const confirmed = await showConfirmModal(
+                'Are you certain?', 
+                'This action cannot be undone. This article will be permanently removed from the editorial archives.'
+            );
+
+            if (!confirmed) return; // If they clicked cancel, stop here
+
+            // Save original button inner HTML & disable it
+            const originalContent = btnElement.innerHTML;
+            btnElement.disabled = true;
+            btnElement.classList.add('opacity-50', 'cursor-not-allowed');
+            btnElement.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            `;
 
             try {
                 await api.get('/sanctum/csrf-cookie');
                 await api.delete(`/api/articles/${id}`);
-                loadArticles(); 
+                
+                // Show success toast notification
+                showToast('Article deleted successfully!', false);
+                
+                loadArticles(); // Refresh the article list (this will redraw the list and wipe out the old button anyway)
             } catch (error) {
-                alert('Failed to delete article');
+                showToast('Error: ' + error.message, true);
                 console.error(error);
+                
+                // Restore button state if it failed
+                btnElement.disabled = false;
+                btnElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnElement.innerHTML = originalContent;
             }
         }
 
