@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Article - Editorial Board</title>
+    <script src="/js/head.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@400;500;600&display=swap');
+        body { background-color: #f4f1ea; font-family: 'Inter', sans-serif; color: #1a1a1a; }
+        .font-newspaper { font-family: 'Playfair Display', serif; }
+        .editorial-card { background-color: #ffffff; border: 1px solid #d1cec3; box-shadow: 4px 4px 0px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<!-- Change this on your <body> tag -->
+<body class="bg-[#f4f1ea] min-h-screen p-8 md:p-16">
+
+    <div class="max-w-4xl mx-auto w-full">
+    <!-- Back button -->
+    <div class="mb-6">
+        <a href="/dashboard.html" class="text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black">&larr; Back to Dashboard</a>
+    </div>
+
+    <!-- Editorial Card -->
+    <div class="editorial-card p-8 md:p-12 bg-white border border-[#d1cec3] shadow-sm">
+        <h2 class="font-newspaper text-3xl font-bold mb-6 border-b border-gray-300 pb-4">Edit Article</h2>
+        
+        <form id="editForm" onsubmit="updateArticle(event)" class="flex flex-col gap-6">
+            <input type="text" id="title" name="title" placeholder="Headline Title" required
+                class="w-full px-4 py-3 bg-transparent border-b border-gray-400 focus:outline-none focus:border-black transition text-lg font-newspaper">
+            
+            <!-- INCREASE ROWS HERE (e.g. from 6 to 9 or 10) to match the content length -->
+            <textarea id="content" name="content" rows="9" required
+                class="w-full px-4 py-3 bg-transparent border border-gray-300 focus:outline-none focus:border-black transition text-gray-700 font-serif"></textarea>
+            
+            <div id="editError" class="hidden text-sm text-red-600 bg-red-50 p-3 border border-red-200"></div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Replace Cover Image (Optional)</label>
+                <input type="file" id="image" name="image" accept="image/*"
+                    class="w-full px-4 py-2 bg-transparent border border-gray-300 focus:outline-none text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-black file:text-white hover:file:bg-gray-800 cursor-pointer">
+            </div>
+
+            <button type="submit" id="updateBtn" class="bg-black hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-sm py-3 px-8 self-end transition">
+                Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+
+    <script>
+        // 1. Get Article ID from URL query parameters (?id=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        // 2. Fetch existing article data on page load
+        async function fetchArticle() {
+            if (!articleId) {
+                alert('No article ID specified!');
+                window.location.href = '/dashboard.html';
+                return;
+            }
+
+            try {
+                const res = await api.get(`/api/articles/${articleId}`);
+                document.getElementById('title').value = res.data.title;
+                document.getElementById('content').value = res.data.content;
+            } catch (error) {
+                console.error(error);
+                alert('Failed to load article details.');
+            }
+        }
+
+        // 3. Submit updated data
+        async function updateArticle(e) {
+            e.preventDefault();
+            const btn = document.getElementById('updateBtn');
+            const errBox = document.getElementById('editError');
+            const form = document.getElementById('editForm');
+
+            btn.innerHTML = 'Saving...';
+            btn.disabled = true;
+            errBox.classList.add('hidden');
+
+            try {
+                await api.get('/sanctum/csrf-cookie');
+                const xsrfToken = decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN=')).split('=')[1]);
+
+                const formData = new FormData(form);
+                // Tell Laravel this POST request acts as a PUT request
+                formData.append('_method', 'POST');
+
+                const response = await fetch(`/api/articles/${articleId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-XSRF-TOKEN': xsrfToken
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Something went wrong');
+                }
+
+                alert('Article updated successfully!');
+                window.location.href = '/dashboard.html';
+            } catch (error) {
+                errBox.innerText = 'Error updating article: ' + error.message;
+                errBox.classList.remove('hidden');
+                console.error(error);
+            } finally {
+                btn.innerHTML = 'Save Changes';
+                btn.disabled = false;
+            }
+        }
+
+        window.addEventListener('load', fetchArticle);
+    </script>
+</body>
+</html>

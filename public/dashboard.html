@@ -48,15 +48,15 @@
         <div class="editorial-card p-8 mb-10">
             <h2 class="font-newspaper text-2xl font-bold mb-6 border-b border-gray-300 pb-2">Draft New Article</h2>
            <form id="articleForm" onsubmit="createArticle(event)" class="flex flex-col gap-5">
-                <input type="text" id="title" placeholder="Headline Title" required
+            <!-- Added name="title" -->
+                <input type="text" id="title" name="title" placeholder="Headline Title" required
                     class="w-full px-4 py-3 bg-transparent border-b border-gray-400 focus:outline-none focus:border-black transition text-lg font-newspaper placeholder-gray-400">
-                
-                <textarea id="content" placeholder="Write your article content here..." rows="5" required
+                <!-- Added name="content" -->
+                <textarea id="content" name="content" placeholder="Write your article content here..." rows="5" required
                     class="w-full px-4 py-3 bg-transparent border border-gray-300 focus:outline-none focus:border-black transition text-gray-700 placeholder-gray-400"></textarea>
                 
+                <!-- ADD THIS Image INPUT -->
                 <div id="createError" class="hidden text-sm text-red-600 bg-red-50 p-3 border border-red-200"></div>
-
-                <!-- ADD THIS FILE INPUT -->
                 <div class="mt-2">
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Cover Image (Optional)</label>
                     <input type="file" id="image" name="image" accept="image/*"
@@ -113,10 +113,18 @@
                             <h3 class="font-newspaper text-xl font-bold text-black mb-1">${article.title}</h3>
                             <p class="text-gray-600 text-sm">${article.content}</p>
                         </div>
+
                         <!-- Delete Button -->
                         <button onclick="deleteArticle(${article.id})" class="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        <!-- Edit button -->
+                        <button onclick="window.location.href='/edit.html?id=${article.id}'" class="text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M17.414 2.586a2 2 0 010 2.828l-10 10a2 2 0 01-.707.414l-4 1a1 1 0 01-1.263-1.263l1-4a2 2 0 01.414-.707l10-10a2 2 0 012.828 0zM15.586 4L16 4.414l-10 10L5.586 14H6v-.414l10-10z" />
                             </svg>
                         </button>
                     </div>

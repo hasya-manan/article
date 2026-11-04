@@ -19,4 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Article Management
     Route::post('/articles', [ArticleController::class, 'store']);
     Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
+    Route::get('/articles/{id}', [ArticleController::class, 'show']);
+    Route::post('/articles/{id}', [ArticleController::class, 'update']); 
+    Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
 });
